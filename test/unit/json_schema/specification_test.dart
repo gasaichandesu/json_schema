@@ -62,11 +62,9 @@ void main() {
   final allDraft2020 =
       specificationTests.entries.where((MapEntry<String, String> entry) => entry.key.startsWith('/draft2020-12'));
 
-  final Null Function(SchemaVersion, Iterable<MapEntry<String, String>>, List<String>, List<String>,
-          {bool isSync, RefProvider<dynamic> refProvider, bool validateFormats}) runAllTestsForDraftX =
-      (SchemaVersion schemaVersion, Iterable<MapEntry<String, String>> allTests, List<String> skipFiles,
-          List<String> skipTests,
-          {bool isSync = false, bool? validateFormats, RefProvider? refProvider}) {
+  runAllTestsForDraftX(SchemaVersion schemaVersion, Iterable<MapEntry<String, String>> allTests, List<String> skipFiles,
+      List<String> skipTests,
+      {bool isSync = false, bool? validateFormats, RefProvider? refProvider}) {
     String shortSchemaVersion = schemaVersion.toString();
     if (schemaVersion == SchemaVersion.draft4) {
       shortSchemaVersion = 'draft4';
@@ -80,32 +78,32 @@ void main() {
       shortSchemaVersion = "draft2020";
     }
 
-    allTests.forEach((testEntry) {
-      final checkResult = (List<ValidationError> validationResults, bool? expectedResult) {
+    for (final testEntry in allTests) {
+      checkResult(List<ValidationError> validationResults, bool? expectedResult) {
         if (validationResults.isEmpty != expectedResult && expectedResult == true) {
-          validationResults.forEach((error) {
+          for (final error in validationResults) {
             print(error);
-          });
+          }
         }
         expect(validationResults.isEmpty, expectedResult);
-      };
+      }
 
       group('Validations ($shortSchemaVersion) ${path.basename(testEntry.key)}', () {
         // Skip these for now - reason shown.
         if (skipFiles.contains(path.basename(testEntry.key))) return;
 
         final List tests = json.decode(testEntry.value);
-        tests.forEach((testEntry) {
+        for (final testEntry in tests) {
           final schemaData = testEntry['schema'];
           final description = testEntry['description'];
           final List validationTests = testEntry['tests'];
 
-          validationTests.forEach((validationTest) {
+          for (final validationTest in validationTests) {
             final String? validationDescription = validationTest['description'];
-            final String testName = '${description} : ${validationDescription}';
+            final String testName = '$description : $validationDescription';
 
             // Individual test cases to skip - reason listed in comments.
-            if (skipTests.contains(testName)) return;
+            if (skipTests.contains(testName)) continue;
 
             test(testName, () {
               final instance = validationTest['data'];
@@ -129,11 +127,11 @@ void main() {
                 });
               }
             });
-          });
-        });
+          }
+        }
       });
-    });
-  };
+    }
+  }
 
   // Mock Ref Provider for refRemote tests. Emulates what createFromUrl would return.
   final RefProvider syncRefProvider = RefProvider.sync((String ref) {

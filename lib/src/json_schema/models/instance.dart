@@ -46,8 +46,8 @@ class Instance {
   toString() => data.toString();
 
   @override
-  bool operator ==(Object other) => other is Instance && this.path == other.path;
+  bool operator ==(Object other) => other is Instance && path == other.path;
 
   @override
-  int get hashCode => this.path.hashCode;
+  int get hashCode => path.hashCode;
 }

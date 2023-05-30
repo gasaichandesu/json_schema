@@ -61,13 +61,13 @@ final _staticSchemaMapping = {
   parseStandardizedUri("https://json-schema.org/draft/2020-12/meta/validation"): Draft2020Subschemas.validation,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/vocab/validation"): Draft2020Subschemas.validation,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/meta/format-annotation"):
-      Draft2020Subschemas.format_annotation,
+      Draft2020Subschemas._formatAnnotation,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/vocab/format-annotation"):
-      Draft2020Subschemas.format_annotation,
+      Draft2020Subschemas._formatAnnotation,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/meta/format-assertion"):
-      Draft2020Subschemas.format_assertion,
+      Draft2020Subschemas._formatAssertion,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/vocab/format-assertion"):
-      Draft2020Subschemas.format_assertion,
+      Draft2020Subschemas._formatAssertion,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/meta/core"): Draft2020Subschemas.core,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/vocab/core"): Draft2020Subschemas.core,
   parseStandardizedUri("https://json-schema.org/draft/2020-12/meta/metadata"): Draft2020Subschemas.metadata,
@@ -620,7 +620,7 @@ class JsonSchemaDefinitions {
             }
         }
     },
-    "$defs": {''' +
+    "$defs": {'''
       '''
       "vocab-applicator": ${Draft2019Subschemas.applicator},
       "vocab-content": ${Draft2019Subschemas.content},
@@ -689,14 +689,14 @@ class JsonSchemaDefinitions {
             "deprecated": true
         }
     },
-    "$defs": {''' +
+    "$defs": {'''
       '''
       "vocab-core": ${Draft2020Subschemas.core},
       "vocab-applicator": ${Draft2020Subschemas.applicator},
       "vocab-unevaluated": ${Draft2020Subschemas.unevaluated},
       "vocab-validation": ${Draft2020Subschemas.validation},
       "vocab-meta-data": ${Draft2020Subschemas.metadata},
-      "vocab-format-annotation": ${Draft2020Subschemas.format_annotation},
+      "vocab-format-annotation": ${Draft2020Subschemas._formatAnnotation},
       "vocab-content": ${Draft2020Subschemas.content}
     }
 }''';
@@ -1207,7 +1207,7 @@ class Draft2020Subschemas {
 }
 ''';
 
-  static String format_annotation = r'''{
+  static final String _formatAnnotation = r'''{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://json-schema.org/draft/2020-12/meta/format-annotation",
     "$vocabulary": {
@@ -1222,7 +1222,7 @@ class Draft2020Subschemas {
     }
 } ''';
 
-  static String format_assertion = r'''{
+  static final String _formatAssertion = r'''{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://json-schema.org/draft/2020-12/meta/format-assertion",
     "$vocabulary": {
@@ -1295,45 +1295,45 @@ class Draft2020Subschemas {
 }
 
 class SupportedVocabularies {
-  static final CORE_2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/core");
-  static final APPLICATOR_2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/applicator");
-  static final VALIDATION_2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/validation");
-  static final METADATA_2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/meta-data");
-  static final FORMAT_2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/format");
-  static final CONTENT_2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/content");
+  static final core2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/core");
+  static final applicator2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/applicator");
+  static final validation2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/validation");
+  static final metadata2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/meta-data");
+  static final format2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/format");
+  static final content2019 = Uri.parse("https://json-schema.org/draft/2019-09/vocab/content");
 
-  static final CORE_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/core");
-  static final APPLICATOR_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/applicator");
-  static final UNEVALUATED_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/unevaluated");
-  static final VALIDATION_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/validation");
-  static final METADATA_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/meta-data");
-  static final FORMAT_ANNOTATION_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/format-annotation");
-  static final CONTENT_2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/content");
+  static final core2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/core");
+  static final applicator2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/applicator");
+  static final unevaluated2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/unevaluated");
+  static final validation2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/validation");
+  static final metadata2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/meta-data");
+  static final formatAnnotation2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/format-annotation");
+  static final content2020 = Uri.parse("https://json-schema.org/draft/2020-12/vocab/content");
 
-  static final ALL_2019 = {
-    CORE_2019,
-    APPLICATOR_2019,
-    VALIDATION_2019,
-    METADATA_2019,
-    FORMAT_2019,
-    CONTENT_2019,
+  static final all2019 = {
+    core2019,
+    applicator2019,
+    validation2019,
+    metadata2019,
+    format2019,
+    content2019,
   };
 
-  static final ALL_2020 = {
-    CORE_2020,
-    APPLICATOR_2020,
-    UNEVALUATED_2020,
-    VALIDATION_2020,
-    METADATA_2020,
-    FORMAT_ANNOTATION_2020,
-    CONTENT_2020,
+  static final all2020 = {
+    core2020,
+    applicator2020,
+    unevaluated2020,
+    validation2020,
+    metadata2020,
+    formatAnnotation2020,
+    content2020,
   };
 
   static Set<Uri> allFor(SchemaVersion version) {
     if (version <= SchemaVersion.draft2019_09) {
-      return ALL_2019;
+      return all2019;
     } else if (version == SchemaVersion.draft2020_12) {
-      return ALL_2020;
+      return all2020;
     } else {
       return Set.identity();
     }

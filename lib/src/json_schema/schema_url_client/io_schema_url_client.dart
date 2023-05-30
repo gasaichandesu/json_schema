@@ -81,9 +81,9 @@ class IoSchemaUrlClient extends SchemaUrlClient {
       throw FormatException('Url schema must be http, file, or empty: $schemaUrl');
     }
     // HTTP servers ignore fragments, so resolve a sub-map if a fragment was specified.
-    var subSchema;
+    Map<String, dynamic>? subSchema;
     try {
-      subSchema = JsonPointer(uriWithFrag.fragment).read(schemaMap);
+      subSchema = JsonPointer(uriWithFrag.fragment).read(schemaMap) as Map<String, dynamic>;
     } catch (_) {
       // Do nothing if we fail to decode or read the pointer.
     }

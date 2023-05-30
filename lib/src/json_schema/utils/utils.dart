@@ -52,7 +52,7 @@ class JsonSchemaUtils {
   static Uri getBaseFromFullUri(Uri uri) {
     List<String> segments = [];
     if (uri.pathSegments.isNotEmpty) {
-      segments = []..addAll(uri.pathSegments);
+      segments = [...uri.pathSegments];
       segments.removeLast();
 
       return uri.replace(pathSegments: segments);

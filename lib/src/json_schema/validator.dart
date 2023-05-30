@@ -96,12 +96,12 @@ class Validator {
   /// Keep track of the number of evaluated items contexts in a list, treating the list as a stack.
   /// The context is an [List] of [bool], representing the number of successful evaluations for the list in the
   /// given context.
-  List<List<bool>> _evaluatedItemsContext = [];
+  final List<List<bool>> _evaluatedItemsContext = [];
 
   /// Keep track of the evaluated properties contexts in a list, treating the list as a stack.
   /// The context is a [Set] of [Instance], keeping track of the instances that have been evaluated
   /// in a given context.
-  List<Set<Instance>> _evaluatedPropertiesContext = [];
+  final List<Set<Instance>> _evaluatedPropertiesContext = [];
 
   /// Lexical and dynamic scopes align until a reference keyword is encountered.
   /// While following the reference keyword moves processing from one lexical scope into a different one,
@@ -113,12 +113,11 @@ class Validator {
   /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.7.1
   ///
   /// This Map keeps track of schemas when a reference is resolved.
-  Map<JsonSchema, JsonSchema> _dynamicParents = {};
+  final Map<JsonSchema, JsonSchema> _dynamicParents = {};
 
-  Set<InstanceRefPair> _refsEncountered = {};
+  final Set<InstanceRefPair> _refsEncountered = {};
 
-  get _evaluatedProperties =>
-      _evaluatedPropertiesContext.isNotEmpty ? _evaluatedPropertiesContext.last : Set<Instance>();
+  get _evaluatedProperties => _evaluatedPropertiesContext.isNotEmpty ? _evaluatedPropertiesContext.last : <Instance>{};
 
   @Deprecated('4.0, to be removed in 5.0, use validate() instead.')
   ValidationResults? validateWithResults(dynamic instance,
@@ -165,7 +164,7 @@ class Validator {
         return ValidationResults(_errors, _warnings);
       } on Exception catch (e) {
         _logger.shout('Unexpected Exception: $e');
-        throw e;
+        rethrow;
       }
     }
 
@@ -241,14 +240,14 @@ class Validator {
     final typeList = schema.typeList;
     if (typeList != null && typeList.isNotEmpty) {
       if (!typeList.any((type) => _typeMatch(type, schema, instance.data))) {
-        _err('type: wanted ${typeList} got $instance', instance.path, schema.path!);
+        _err('type: wanted $typeList got $instance', instance.path, schema.path!);
       }
     }
   }
 
   void _constValidation(JsonSchema schema, dynamic instance) {
     if (schema.hasConst && !DeepCollectionEquality().equals(instance.data, schema.constValue)) {
-      _err('const violated ${instance}', instance.path, schema.path!);
+      _err('const violated $instance', instance.path, schema.path!);
     }
   }
 
@@ -258,14 +257,14 @@ class Validator {
       try {
         enumValues!.singleWhere((v) => DeepCollectionEquality().equals(instance.data, v));
       } on StateError {
-        _err('enum violated ${instance}', instance.path, schema.path!);
+        _err('enum violated $instance', instance.path, schema.path!);
       }
     }
   }
 
   void _validateDeprecated(JsonSchema schema, dynamic instance) {
     if (schema.deprecated == true) {
-      _warn('deprecated ${instance}', instance.path, schema.path!);
+      _warn('deprecated $instance', instance.path, schema.path!);
     }
   }
 
@@ -274,7 +273,7 @@ class Validator {
     // ignore: deprecated_member_use_from_same_package
     schema.customAttributeValidators.forEach((keyword, validator) {
       // ignore: unused_local_variable
-      var _context = validator(context, instance.data);
+      final _ = validator(context, instance.data);
     });
   }
 
@@ -352,7 +351,7 @@ class Validator {
             }
           } else if (additionalItemsBool != null) {
             if (!additionalItemsBool && actual > end) {
-              _err('additionalItems false', instance.path, schema.path! + '/additionalItems');
+              _err('additionalItems false', instance.path, '${schema.path!}/additionalItems');
             } else {
               // All the items in this list have been evaluated.
               _setAllItemsAsEvaluated();
@@ -412,11 +411,11 @@ class Validator {
     if (unevaluatedItems != null && schema.additionalItemsBool is! bool) {
       final actual = instance.data.length;
       if (unevaluatedItems.schemaBool != null) {
-        if (unevaluatedItems.schemaBool == false && actual > this._evaluatedItemCount) {
-          _err('unevaluatedItems false', instance.path, schema.path! + '/unevaluatedItems');
+        if (unevaluatedItems.schemaBool == false && actual > _evaluatedItemCount) {
+          _err('unevaluatedItems false', instance.path, '${schema.path!}/unevaluatedItems');
         }
       } else {
-        var evaluatedItemsList = this._evaluatedItemsContext.last;
+        var evaluatedItemsList = _evaluatedItemsContext.last;
         for (int i = 0; i < evaluatedItemsList.length; i++) {
           if (evaluatedItemsList[i] == false) {
             final itemInstance = Instance(instance.data[i], path: '${instance.path}/$i');
@@ -439,10 +438,10 @@ class Validator {
     );
     final isValid = v.validate(instance).isValid;
     if (isValid) {
-      if (this._isInEvaluatedItemContext) {
+      if (_isInEvaluatedItemContext) {
         _mergeEvaluatedItems(v._evaluatedItemsContext.lastOrNull);
       }
-      if (this._isInEvaluatedPropertiesContext) {
+      if (_isInEvaluatedPropertiesContext) {
         v._evaluatedProperties.forEach((e) => _addEvaluatedProp(e));
       }
     }
@@ -451,7 +450,7 @@ class Validator {
 
   _validateAllOf(JsonSchema schema, Instance instance) {
     if (!schema.allOf.every((s) => _validateAndCaptureEvaluations(s, instance))) {
-      _err('${schema.path}: allOf violated ${instance}', instance.path, schema.path! + '/allOf');
+      _err('${schema.path}: allOf violated $instance', instance.path, '${schema.path!}/allOf');
     }
   }
 
@@ -469,7 +468,7 @@ class Validator {
     }
     if (!anyOfValid) {
       // TODO: deal with /anyOf
-      _err('${schema.path}/anyOf: anyOf violated ($instance, ${schema.anyOf})', instance.path, schema.path! + '/anyOf');
+      _err('${schema.path}/anyOf: anyOf violated ($instance, ${schema.anyOf})', instance.path, '${schema.path!}/anyOf');
     }
   }
 
@@ -478,7 +477,7 @@ class Validator {
       schema.oneOf.map((s) => _validateAndCaptureEvaluations(s, instance)).singleWhere((s) => s);
     } on StateError catch (notOneOf) {
       // TODO consider passing back validation errors from sub-validations
-      _err('${schema.path}/oneOf: violated ${notOneOf.message}', instance.path, schema.path! + '/oneOf');
+      _err('${schema.path}/oneOf: violated ${notOneOf.message}', instance.path, '${schema.path!}/oneOf');
     }
   }
 
@@ -536,7 +535,7 @@ class Validator {
         if (additionalPropertiesSchema != null) {
           _validate(additionalPropertiesSchema, newInstance);
         } else if (propMustValidate) {
-          _err('unallowed additional property $k', instance.path, schema.path! + '/additionalProperties');
+          _err('unallowed additional property $k', instance.path, '${schema.path!}/additionalProperties');
         } else if (schema.additionalPropertiesBool == true) {
           _addEvaluatedProp(newInstance);
         }
@@ -550,7 +549,7 @@ class Validator {
     schema.propertyDependencies.forEach((k, dependencies) {
       if (instance.data.containsKey(k)) {
         if (!dependencies.every((prop) => instance.data.containsKey(prop))) {
-          _err('prop $k => $dependencies required', instance.path, schema.path! + '/dependencies');
+          _err('prop $k => $dependencies required', instance.path, '${schema.path!}/dependencies');
         } else {
           _addEvaluatedProp(instance);
         }
@@ -576,21 +575,21 @@ class Validator {
     final minProps = schema.minProperties;
     final maxProps = schema.maxProperties;
     if (numProps < minProps) {
-      _err('minProperties violated (${numProps} < ${minProps})', instance.path, schema.path!);
+      _err('minProperties violated ($numProps < $minProps)', instance.path, schema.path!);
     } else if (maxProps != null && numProps > maxProps) {
-      _err('maxProperties violated (${numProps} > ${maxProps})', instance.path, schema.path!);
+      _err('maxProperties violated ($numProps > $maxProps)', instance.path, schema.path!);
     }
 
     // Required Properties
     if (schema.requiredProperties != null) {
-      schema.requiredProperties!.forEach((prop) {
+      for (final prop in schema.requiredProperties!) {
         if (!instance.data.containsKey(prop)) {
           // One error for the root object that contains the missing property.
-          _err('required prop missing: ${prop} from $instance', instance.path, schema.path! + '/required');
+          _err('required prop missing: $prop from $instance', instance.path, '${schema.path!}/required');
           // Another error for the property on the root object. (Allows consumers to identify errors for individual fields)
-          _err('required prop missing: ${prop} from $instance', '${instance.path}/${prop}', schema.path! + '/required');
+          _err('required prop missing: $prop from $instance', '${instance.path}/$prop', '${schema.path!}/required');
         }
-      });
+      }
     }
 
     _objectPropertyValidation(schema, instance);
@@ -609,7 +608,7 @@ class Validator {
       } else {
         instance.data.forEach((k, v) {
           var i = Instance(v, path: '${instance.path}/$k');
-          if (!this._evaluatedProperties.contains(i)) {
+          if (!_evaluatedProperties.contains(i)) {
             _validate(unevaluatedProperties, i);
           }
         });
@@ -654,7 +653,7 @@ class Validator {
     var irp = InstanceRefPair(instance.path, refScope);
     if (!_refsEncountered.add(irp)) {
       // Throw if cycle is detected while evaluating refs.
-      throw FormatException('Cycle detected at path: "${refScope}"');
+      throw FormatException('Cycle detected at path: "$refScope"');
     }
     fn();
     _refsEncountered.remove(irp);
@@ -744,7 +743,9 @@ class Validator {
     if (instance.data is Map) _objectValidation(schema, instance);
     if (schema.deprecated == true) _validateDeprecated(schema, instance);
     // ignore: deprecated_member_use_from_same_package
-    if (schema.customAttributeValidators.isNotEmpty) _validateCustomSetAttributes(schema, instance);
+    if (schema.customAttributeValidators.isNotEmpty) {
+      _validateCustomSetAttributes(schema, instance);
+    }
 
     if (schema.unevaluatedItems != null) {
       _popEvaluatedItemsContext();
@@ -761,14 +762,14 @@ class Validator {
         if (schema.thenSchema == null) return true;
         if (!_validateAndCaptureEvaluations(schema.thenSchema, instance)) {
           _err('${schema.path}/then: then violated ($instance, ${schema.thenSchema})', instance.path,
-              schema.path! + '/then');
+              '${schema.path!}/then');
         }
       } else {
         // Bail out early if no "else" is specified.
         if (schema.elseSchema == null) return true;
         if (!_validateAndCaptureEvaluations(schema.elseSchema, instance)) {
           _err('${schema.path}/else: else violated ($instance, ${schema.elseSchema})', instance.path,
-              schema.path! + '/else');
+              '${schema.path!}/else');
         }
       }
       // Return early since we recursively call _validate in these cases.
@@ -824,7 +825,7 @@ class Validator {
   //////
 
   _pushEvaluatedPropertiesContext() {
-    _evaluatedPropertiesContext.add(Set<Instance>());
+    _evaluatedPropertiesContext.add(<Instance>{});
   }
 
   _popEvaluatedPropertiesContext() {
@@ -864,8 +865,8 @@ class Validator {
     _warnings.add(ValidationError._(instancePath, schemaPath, msg));
   }
 
-  JsonSchema? _rootSchema;
+  final JsonSchema? _rootSchema;
   List<ValidationError> _errors = [];
-  List<ValidationError> _warnings = [];
+  final List<ValidationError> _warnings = [];
   late bool _reportMultipleErrors;
 }

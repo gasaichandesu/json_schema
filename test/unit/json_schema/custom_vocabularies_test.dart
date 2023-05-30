@@ -64,8 +64,10 @@ main() {
         customVocabularies: customVocabularies,
       );
 
-      // ignore: deprecated_member_use_from_same_package
-      expect(schema.properties['publishedOn']!.customAttributeValidators.keys.contains('minDate'), isTrue);
+      expect(
+          // ignore: deprecated_member_use_from_same_package
+          schema.properties['publishedOn']!.customAttributeValidators.keys.contains('minDate'),
+          isTrue);
 
       expect(schema.validate({'baz': 'foo', 'publishedOn': '2970-01-01'}).isValid, isTrue);
       expect(schema.validate({'baz': 'foo', 'publishedOn': '1970-01-01'}).isValid, isFalse);
@@ -109,7 +111,7 @@ Object _minDateSetter(JsonSchema s, Object? value) {
   try {
     return DateTime.parse(valueStr);
   } catch (e) {
-    throw FormatExceptions.error("minDate must parse as a date: ${value}");
+    throw FormatExceptions.error("minDate must parse as a date: $value");
   }
 }
 

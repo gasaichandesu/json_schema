@@ -7,14 +7,14 @@
 
 import 'package:shelf/shelf.dart';
 
-const ACCESS_CONTROL_ALLOW_ORIGIN = 'Access-Control-Allow-Origin';
-const ACCESS_CONTROL_EXPOSE_HEADERS = 'Access-Control-Expose-Headers';
-const ACCESS_CONTROL_ALLOW_CREDENTIALS = 'Access-Control-Allow-Credentials';
-const ACCESS_CONTROL_ALLOW_HEADERS = 'Access-Control-Allow-Headers';
-const ACCESS_CONTROL_ALLOW_METHODS = 'Access-Control-Allow-Methods';
-const ACCESS_CONTROL_MAX_AGE = 'Access-Control-Max-Age';
+const accessControlAllowOrigin = 'Access-Control-Allow-Origin';
+const accessControlExposeHeaders = 'Access-Control-Expose-Headers';
+const accessControlAllowCredenials = 'Access-Control-Allow-Credentials';
+const accessControlAllowHeaders = 'Access-Control-Allow-Headers';
+const accessControlAllowMethods = 'Access-Control-Allow-Methods';
+const accessControlMaxAge = 'Access-Control-Max-Age';
 
-const ORIGIN = 'origin';
+const _origin = 'origin';
 
 const _defaultHeadersList = [
   'accept',
@@ -29,11 +29,11 @@ const _defaultHeadersList = [
 const _defaultMethodsList = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'];
 
 Map<String, String> _defaultHeaders = {
-  ACCESS_CONTROL_EXPOSE_HEADERS: '',
-  ACCESS_CONTROL_ALLOW_CREDENTIALS: 'true',
-  ACCESS_CONTROL_ALLOW_HEADERS: _defaultHeadersList.join(','),
-  ACCESS_CONTROL_ALLOW_METHODS: _defaultMethodsList.join(','),
-  ACCESS_CONTROL_MAX_AGE: '86400',
+  accessControlExposeHeaders: '',
+  accessControlAllowCredenials: 'true',
+  accessControlAllowHeaders: _defaultHeadersList.join(','),
+  accessControlAllowMethods: _defaultMethodsList.join(','),
+  accessControlMaxAge: '86400',
 };
 
 final _defaultHeadersAll = _defaultHeaders.map((key, value) => MapEntry(key, [value]));
@@ -50,22 +50,22 @@ Middleware corsHeaders({
   final headersAll = headers?.map((key, value) => MapEntry(key, [value]));
   return (Handler handler) {
     return (Request request) async {
-      final origin = request.headers[ORIGIN];
+      final origin = request.headers[_origin];
       if (origin == null || !originChecker(origin)) {
         return handler(request);
       }
-      final _headers = <String, List<String>>{
+      final headers = <String, List<String>>{
         ..._defaultHeadersAll,
         ...?headersAll,
-        ACCESS_CONTROL_ALLOW_ORIGIN: [origin],
+        accessControlAllowOrigin: [origin],
       };
 
       if (request.method == 'OPTIONS') {
-        return Response.ok(null, headers: _headers);
+        return Response.ok(null, headers: headers);
       }
 
       final response = await handler(request);
-      return response.change(headers: {...response.headersAll, ..._headers});
+      return response.change(headers: {...response.headersAll, ...headers});
     };
   };
 }
