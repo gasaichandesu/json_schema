@@ -19,13 +19,14 @@ class TypeValidators {
   static List uniqueList(String key, dynamic value) {
     int i = 0;
     final List enumValues = TypeValidators.nonEmptyList(key, value);
-    enumValues.forEach((v) {
+    for (final _ in enumValues) {
       for (int j = i + 1; j < enumValues.length; j++) {
-        if (DeepCollectionEquality().equals(enumValues[i], enumValues[j]))
+        if (DeepCollectionEquality().equals(enumValues[i], enumValues[j])) {
           throw FormatExceptions.error('enum values must be unique: $value [$i]==[$j]');
+        }
       }
       i++;
-    });
+    }
     return enumValues;
   }
 
@@ -57,7 +58,9 @@ class TypeValidators {
   }
 
   static int nonNegative(String key, int value) {
-    if (value < 0) throw FormatExceptions.error('$key must be non-negative: $value');
+    if (value < 0) {
+      throw FormatExceptions.error('$key must be non-negative: $value');
+    }
     return value;
   }
 

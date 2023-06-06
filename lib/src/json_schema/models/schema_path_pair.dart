@@ -53,8 +53,8 @@ class SchemaPathPair {
 
   @override
   bool operator ==(Object other) =>
-      other is SchemaPathPair && this.schema.hashCode == other.schema.hashCode && this.path == other.path;
+      other is SchemaPathPair && schema.hashCode == other.schema.hashCode && path == other.path;
 
   @override
-  int get hashCode => _hashCode ?? (_hashCode = Hasher.hash2(this.schema.hashCode, this.path.hashCode));
+  int get hashCode => _hashCode ?? (_hashCode = Hasher.hash2(schema.hashCode, path.hashCode));
 }

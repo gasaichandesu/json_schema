@@ -58,7 +58,7 @@ main() async {
   );
 
   var validSchema = {'epochDate': '2024-12-01'};
-  print('''Is ${validSchema} in a time that's known to exist?
+  print('''Is $validSchema in a time that's known to exist?
    ${schema.validate(validSchema)}''');
 
   var invalidSchema = {'epochDate': '1900-01-01'};
@@ -72,7 +72,7 @@ Object _dateSetter(JsonSchema s, Object? value) {
   try {
     return DateTime.parse(value as String);
   } catch (e) {
-    throw FormatException("value must parse as a date: ${value}");
+    throw FormatException("value must parse as a date: $value");
   }
 }
 

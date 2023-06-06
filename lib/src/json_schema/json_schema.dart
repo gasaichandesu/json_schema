@@ -80,12 +80,12 @@ class JsonSchema {
     if (schemaMap == null) {
       throw ArgumentError.notNull('schemaMap');
     }
-    this._parent = parent;
+    _parent = parent;
     _initialize();
   }
 
   JsonSchema._fromBool(this._root, this._schemaBool, this._path, {JsonSchema? parent}) : _schemaMap = null {
-    this._parent = parent;
+    _parent = parent;
     _initialize();
   }
 
@@ -292,7 +292,7 @@ class JsonSchema {
     final JsonSchema root;
     if (_root == null) {
       /// Set the Schema version before doing anything else, since almost everything depends on it.
-      final version = _getSchemaVersion(schemaVersion, this._schemaMap);
+      final version = _getSchemaVersion(schemaVersion, _schemaMap);
 
       root = _root = this;
       _isSync = isSync;
@@ -355,12 +355,12 @@ class JsonSchema {
     } else if (_root?.schemaVersion == SchemaVersion.draft6) {
       accessMap = _accessMapV6;
     } else if ((_root?.schemaVersion ?? schemaVersion) >= SchemaVersion.draft2019_09) {
-      final vocabMap = Map()
+      final vocabMap = {}
         ..addAll(_vocabMaps)
         ..addAll(_customVocabMap);
-      this.metaschemaVocabulary?.keys.forEach((vocabUri) {
+      for (final vocabUri in metaschemaVocabulary?.keys ?? <Uri>[]) {
         accessMap.addAll(vocabMap[vocabUri.toString()]);
-      });
+      }
     } else {
       accessMap = _accessMapV7;
     }
@@ -395,12 +395,14 @@ class JsonSchema {
 
   void _validateInterdependentProperties() {
     // Check that a minimum is set if both exclusiveMinimum and minimum properties are set.
-    if (_exclusiveMinimum != null && _minimum == null)
+    if (_exclusiveMinimum != null && _minimum == null) {
       throw FormatExceptions.error('exclusiveMinimum requires minimum');
+    }
 
     // Check that a minimum is set if both exclusiveMaximum and maximum properties are set.
-    if (_exclusiveMaximum != null && _maximum == null)
+    if (_exclusiveMaximum != null && _maximum == null) {
       throw FormatExceptions.error('exclusiveMaximum requires maximum');
+    }
   }
 
   /// Validate, calculate and set all properties on the [JsonSchema], included properties
@@ -432,7 +434,7 @@ class JsonSchema {
         // Attempt to resolve schema if it does not exist within ref map already.
         if (schemaUri != null && _refMap[schemaUri.toString()] == null) {
           final Uri baseUri = schemaUri.scheme.isNotEmpty ? schemaUri.removeFragment() : schemaUri;
-          final String baseUriString = '${baseUri}#';
+          final String baseUriString = '$baseUri#';
 
           if (baseUri.path == _inheritedUri?.path) {
             // If the ref base is the same as the _inheritedUri, ref is _root schema.
@@ -475,7 +477,9 @@ class JsonSchema {
         await Future.wait(_retrievalRequests.map((r) => r.asyncRetrievalOperation()));
       }
 
-      _schemaAssignments.forEach((assignment) => assignment());
+      for (final assignment in _schemaAssignments) {
+        assignment();
+      }
       _thisCompleter.complete(_getSchemaFromPath(Uri.parse('#')));
     }
   }
@@ -492,7 +496,9 @@ class JsonSchema {
         }
       }
 
-      _schemaAssignments.forEach((assignment) => assignment());
+      for (final assignment in _schemaAssignments) {
+        assignment();
+      }
 
       // Throw an error if there are any remaining retrieval requests the ref provider couldn't resolve.
       if (_retrievalRequests.isNotEmpty) {
@@ -541,7 +547,7 @@ class JsonSchema {
   void _resolveMetaSchemasSync(Uri baseUri) {
     final Map<String, dynamic>? staticSchema = getStaticSchemaByURI(baseUri) ??
         _refProvider?.provide(baseUri.toString()) ??
-        _refProvider?.provide('${baseUri}#');
+        _refProvider?.provide('$baseUri#');
 
     if (staticSchema?.containsKey(r'$vocabulary') == true) {
       _setMetaschemaVocabulary(staticSchema![r'$vocabulary']);
@@ -552,7 +558,7 @@ class JsonSchema {
     final refProvider = _refProvider ?? defaultUrlRefProvider;
     final Map<String, dynamic>? staticSchema = getStaticSchemaByURI(baseUri) as Map<String, dynamic>? ??
         await refProvider.provide(baseUri.toString()) ??
-        await refProvider.provide('${baseUri}#');
+        await refProvider.provide('$baseUri#');
 
     if (staticSchema?.containsKey(r'$vocabulary') == true) {
       try {
@@ -683,7 +689,7 @@ class JsonSchema {
       Uri? pathUri, List<String> fragments, JsonSchema? baseSchema, Set<Uri?> refsEncountered,
       {bool skipInitialRefCheck = false}) {
     // Set of properties that are ignored when set beside a `$ref`.
-    final Set<String> consts = Set.of([r'$id', r'$schema', r'$comment']);
+    final Set<String> consts = {r'$id', r'$schema', r'$comment'};
     if (fragments.isNotEmpty) {
       // Start at the baseSchema.
       JsonSchema? currentSchema = baseSchema;
@@ -797,9 +803,7 @@ class JsonSchema {
 
   /// Look for the given anchor at the schema. Returns null if nothing is found.
   JsonSchema? _resolveDynamicAnchor(String dynamicAnchor, JsonSchema? schema) {
-    if (schema == null) {
-      schema = this;
-    }
+    schema ??= this;
     if (schema.schemaVersion < SchemaVersion.draft2020_12) {
       return null;
     }
@@ -824,7 +828,7 @@ class JsonSchema {
       return JsonSchema._fromBool(_root, schemaDefinition, path, parent: this);
     }
     throw ArgumentError(
-        'Data provided to createSubSchema is not valid: Must be a Map (or bool in draft6 or later). | ${schemaDefinition}');
+        'Data provided to createSubSchema is not valid: Must be a Map (or bool in draft6 or later). | $schemaDefinition');
   }
 
   JsonSchema? _fetchRefSchemaFromSyncProvider(Uri ref) {
@@ -841,7 +845,7 @@ class JsonSchema {
     // 3. Base URI with empty fragment (example: localhost:1234/integer.json#)
     final Map<String, dynamic>? schemaDefinition = getStaticSchemaByURI(ref) as Map<String, dynamic>? ??
         _refProvider?.provide(baseUri.toString()) ??
-        _refProvider?.provide('${baseUri}#');
+        _refProvider?.provide('$baseUri#');
 
     return _createAndResolveProvidedSchema(ref, schemaDefinition);
   }
@@ -862,7 +866,7 @@ class JsonSchema {
     // 3. Base URI with empty fragment (example: localhost:1234/integer.json#)
     final dynamic schemaDefinition = getStaticSchemaByURI(ref) ??
         await refProvider!.provide(baseUri.toString()) ??
-        await refProvider!.provide('${baseUri}#');
+        await refProvider!.provide('$baseUri#');
 
     return _createAndResolveProvidedSchema(ref, schemaDefinition);
   }
@@ -938,10 +942,10 @@ class JsonSchema {
   Uri? _fetchedFromUriBase;
 
   /// A [List<JsonSchema>] which the value must conform to all of.
-  List<JsonSchema> _allOf = [];
+  final List<JsonSchema> _allOf = [];
 
   /// A [List<JsonSchema>] which the value must conform to at least one of.
-  List<JsonSchema> _anyOf = [];
+  final List<JsonSchema> _anyOf = [];
 
   /// Whether or not const is set, we need this since const can be null and valid.
   bool _hasConst = false;
@@ -953,10 +957,10 @@ class JsonSchema {
   dynamic _defaultValue;
 
   /// Included [JsonSchema] definitions.
-  Map<String, JsonSchema> _definitions = {};
+  final Map<String, JsonSchema> _definitions = {};
 
   /// Included [JsonSchema] $defs.
-  Map<String, JsonSchema> _defs = {};
+  final Map<String, JsonSchema> _defs = {};
 
   /// Whether the [JsonSchema] is deprecated.
   bool? _deprecated;
@@ -1037,7 +1041,7 @@ class JsonSchema {
   JsonSchema? _notSchema;
 
   /// A [List<JsonSchema>] which the value must conform to at least one of.
-  List<JsonSchema> _oneOf = [];
+  final List<JsonSchema> _oneOf = [];
 
   /// The regular expression the [JsonSchema] value must conform to.
   RegExp? _pattern;
@@ -1119,7 +1123,7 @@ class JsonSchema {
   // --------------------------------------------------------------------------
 
   /// Map of [JsonSchema]s by property key.
-  Map<String, JsonSchema> _properties = {};
+  final Map<String, JsonSchema> _properties = {};
 
   /// [JsonSchema] that property names must conform to.
   JsonSchema? _propertyNamesSchema;
@@ -1130,9 +1134,9 @@ class JsonSchema {
   /// [JsonSchema] that additional properties must conform to.
   JsonSchema? _additionalPropertiesSchema;
 
-  Map<String, List<String>> _propertyDependencies = {};
+  final Map<String, List<String>> _propertyDependencies = {};
 
-  Map<String, JsonSchema> _schemaDependencies = {};
+  final Map<String, JsonSchema> _schemaDependencies = {};
 
   /// [JsonSchema] that unevaluated properties must conform to.
   JsonSchema? _unevaluatedProperties;
@@ -1144,7 +1148,7 @@ class JsonSchema {
   int _minProperties = 0;
 
   /// Map of [JsonSchema]s for properties, based on [RegExp]s keys.
-  Map<RegExp, JsonSchema> _patternProperties = {};
+  final Map<RegExp, JsonSchema> _patternProperties = {};
 
   /// Map of sub-properties' and references' [JsonSchema]s by path.
   Map<String, JsonSchema> _refMap = {};
@@ -1162,10 +1166,10 @@ class JsonSchema {
   int? _hashCode;
 
   /// Set of local ref Uris to validate during ref resolution.
-  Set<Uri?> _localRefs = Set<Uri?>();
+  final Set<Uri?> _localRefs = <Uri?>{};
 
   /// HTTP(S) requests to fetch ref'd schemas.
-  List<RetrievalRequest> _retrievalRequests = [];
+  final List<RetrievalRequest> _retrievalRequests = [];
 
   /// Remote ref assignments that need to wait until RetrievalRequests have been resolved to execute.
   ///
@@ -1190,7 +1194,7 @@ class JsonSchema {
   /// Store results for looking up paths in a jsonSchema. Helps performance and bogus cycle detection.
   Map<SchemaPathPair, JsonSchema>? _rootMemomizedPathResults;
 
-  static Map<String, SchemaPropertyGetter> _baseAccessGetterMap = {
+  static final Map<String, SchemaPropertyGetter> _baseAccessGetterMap = {
     r'$defs': (JsonSchema s) => s.defs,
     'definitions': (JsonSchema s) => s.definitions,
     'properties': (JsonSchema s) => s.properties,
@@ -1199,7 +1203,7 @@ class JsonSchema {
   };
 
   /// Shared keywords across all versions of JSON Schema.
-  static Map<String, SchemaPropertySetter> _baseAccessMap = {
+  static final Map<String, SchemaPropertySetter> _baseAccessMap = {
     // Root Schema Properties
     'allOf': (JsonSchema s, dynamic v) => s._setAllOf(v),
     'anyOf': (JsonSchema s, dynamic v) => s._setAnyOf(v),
@@ -1236,7 +1240,7 @@ class JsonSchema {
   };
 
   /// Map to allow getters to be accessed by String key.
-  static Map<String, SchemaPropertySetter> _accessMapV4 = Map<String, SchemaPropertySetter>()
+  static final Map<String, SchemaPropertySetter> _accessMapV4 = <String, SchemaPropertySetter>{}
     ..addAll(_baseAccessMap)
     ..addAll({
       // Add properties that are changed incompatibly later.
@@ -1246,7 +1250,7 @@ class JsonSchema {
       'required': (JsonSchema s, dynamic v) => s._setRequired(v),
     });
 
-  static Map<String, SchemaPropertySetter> _accessMapV6 = Map<String, SchemaPropertySetter>()
+  static final Map<String, SchemaPropertySetter> _accessMapV6 = <String, SchemaPropertySetter>{}
     ..addAll(_baseAccessMap)
     ..addAll({
       // Note: see https://json-schema.org/draft-06/json-schema-release-notes.html
@@ -1263,7 +1267,7 @@ class JsonSchema {
       'required': (JsonSchema s, dynamic v) => s._setRequiredV6(v),
     });
 
-  static Map<String, SchemaPropertySetter> _accessMapV7 = Map<String, SchemaPropertySetter>()
+  static final Map<String, SchemaPropertySetter> _accessMapV7 = <String, SchemaPropertySetter>{}
     ..addAll(_baseAccessMap)
     ..addAll(_accessMapV6)
     ..addAll({
@@ -1280,8 +1284,7 @@ class JsonSchema {
       'contentEncoding': (JsonSchema s, dynamic v) => s._setContentEncoding(v),
     });
 
-  static Map<String, SchemaPropertySetter> _draft2019_core = Map<String, SchemaPropertySetter>()
-    ..addAll({
+  static final Map<String, SchemaPropertySetter> _draft2019Core = <String, SchemaPropertySetter>{}..addAll({
       r'$id': (JsonSchema s, dynamic v) => s._setId(v),
       r'$schema': (JsonSchema s, Object? v) => s._setSchema(v),
       r'$anchor': (JsonSchema s, dynamic v) => s._setAnchor(v),
@@ -1292,8 +1295,7 @@ class JsonSchema {
       r'$comment': (JsonSchema s, dynamic v) => s._setComment(v),
       r'$defs': (JsonSchema s, dynamic v) => s._setDefs(v),
     });
-  static Map<String, SchemaPropertySetter> _draft2019_applicator = Map<String, SchemaPropertySetter>()
-    ..addAll({
+  static final Map<String, SchemaPropertySetter> _draft2019Applicator = <String, SchemaPropertySetter>{}..addAll({
       'additionalItems': (JsonSchema s, dynamic v) => s._setAdditionalItems(v),
       'unevaluatedItems': (JsonSchema s, dynamic v) => s._setUnevaluatedItems(v),
       'items': (JsonSchema s, dynamic v) => s._setItems(v),
@@ -1313,18 +1315,16 @@ class JsonSchema {
       'not': (JsonSchema s, dynamic v) => s._setNot(v)
     });
 
-  static Map<String, SchemaPropertySetter> _draft2019_content = Map<String, SchemaPropertySetter>()
-    ..addAll({
+  static final Map<String, SchemaPropertySetter> _draft2019Content = <String, SchemaPropertySetter>{}..addAll({
       'contentMediaType': (JsonSchema s, dynamic v) => s._setContentMediaType(v),
       'contentEncoding': (JsonSchema s, dynamic v) => s._setContentEncoding(v),
       'contentSchema': (JsonSchema s, dynamic v) => s._setContentSchema(v)
     });
 
-  static Map<String, SchemaPropertySetter> _draft2019_format = Map<String, SchemaPropertySetter>()
+  static final Map<String, SchemaPropertySetter> _draft2019Format = <String, SchemaPropertySetter>{}
     ..addAll({'format': (JsonSchema s, dynamic v) => s._setFormat(v)});
 
-  static Map<String, SchemaPropertySetter> _draft2019_metadata = Map<String, SchemaPropertySetter>()
-    ..addAll({
+  static final Map<String, SchemaPropertySetter> _draft2019Metadata = <String, SchemaPropertySetter>{}..addAll({
       'title': (JsonSchema s, dynamic v) => s._setTitle(v),
       'description': (JsonSchema s, dynamic v) => s._setDescription(v),
       'default': (JsonSchema s, dynamic v) => s._setDefault(v),
@@ -1334,8 +1334,7 @@ class JsonSchema {
       'examples': (JsonSchema s, dynamic v) => s._setExamples(v)
     });
 
-  static Map<String, SchemaPropertySetter> _draft2019_validation = Map<String, SchemaPropertySetter>()
-    ..addAll({
+  static final Map<String, SchemaPropertySetter> _draft2019Validation = <String, SchemaPropertySetter>{}..addAll({
       'multipleOf': (JsonSchema s, dynamic v) => s._setMultipleOf(v),
       'maximum': (JsonSchema s, dynamic v) => s._setMaximum(v),
       'exclusiveMaximum': (JsonSchema s, dynamic v) => s._setExclusiveMaximumV6(v),
@@ -1358,25 +1357,24 @@ class JsonSchema {
       'type': (JsonSchema s, dynamic v) => s._setType(v)
     });
 
-  static Map<String, Map<String, SchemaPropertySetter>> _draft2019VocabMap = Map()
-    ..addAll({
-      "https://json-schema.org/draft/2019-09/vocab/core": _draft2019_core,
-      "https://json-schema.org/draft/2019-09/vocab/applicator": _draft2019_applicator,
-      "https://json-schema.org/draft/2019-09/vocab/validation": _draft2019_validation,
-      "https://json-schema.org/draft/2019-09/vocab/meta-data": _draft2019_metadata,
-      "https://json-schema.org/draft/2019-09/vocab/format": _draft2019_format,
-      "https://json-schema.org/draft/2019-09/vocab/content": _draft2019_content
+  static final Map<String, Map<String, SchemaPropertySetter>> _draft2019VocabMap = {}..addAll({
+      "https://json-schema.org/draft/2019-09/vocab/core": _draft2019Core,
+      "https://json-schema.org/draft/2019-09/vocab/applicator": _draft2019Applicator,
+      "https://json-schema.org/draft/2019-09/vocab/validation": _draft2019Validation,
+      "https://json-schema.org/draft/2019-09/vocab/meta-data": _draft2019Metadata,
+      "https://json-schema.org/draft/2019-09/vocab/format": _draft2019Format,
+      "https://json-schema.org/draft/2019-09/vocab/content": _draft2019Content
     });
 
-  static Map<String, SchemaPropertySetter> _draft2020_core = Map<String, SchemaPropertySetter>()
-    ..addAll(_draft2019_core)
+  static final Map<String, SchemaPropertySetter> _draft2020Core = <String, SchemaPropertySetter>{}
+    ..addAll(_draft2019Core)
     ..addAll({
       r'$dynamicRef': (JsonSchema s, dynamic v) => s._setDynamicRef(v),
       r'$dynamicAnchor': (JsonSchema s, dynamic v) => s._setDynamicAnchor(v),
     });
 
-  static Map<String, SchemaPropertySetter> _draft2020_applicator = Map<String, SchemaPropertySetter>()
-    ..addAll(_draft2019_applicator)
+  static final Map<String, SchemaPropertySetter> _draft2020Applicator = <String, SchemaPropertySetter>{}
+    ..addAll(_draft2019Applicator)
     ..remove('unevaluatedItems')
     ..remove('unevaluatedProperties')
     ..addAll({
@@ -1384,53 +1382,51 @@ class JsonSchema {
       'items': (JsonSchema s, dynamic v) => s._setItemsDraft2020(v),
     });
 
-  static Map<String, SchemaPropertySetter> _draft2020_unevaluated = Map<String, SchemaPropertySetter>()
-    ..addAll({
+  static final Map<String, SchemaPropertySetter> _draft2020Unevaluated = <String, SchemaPropertySetter>{}..addAll({
       'unevaluatedItems': (JsonSchema s, dynamic v) => s._setUnevaluatedItems(v),
       'unevaluatedProperties': (JsonSchema s, dynamic v) => s._setUnevaluatedProperties(v),
     });
 
-  static Map<String, SchemaPropertySetter> _draft2020_validation = Map<String, SchemaPropertySetter>()
-    ..addAll(_draft2019_validation);
+  static final Map<String, SchemaPropertySetter> _draft2020Validation = <String, SchemaPropertySetter>{}
+    ..addAll(_draft2019Validation);
 
-  static Map<String, SchemaPropertySetter> _draft2020_format_annotation = Map<String, SchemaPropertySetter>()
+  static final Map<String, SchemaPropertySetter> _draft2020FormatAnnotation = <String, SchemaPropertySetter>{}
     ..addAll({'format': (JsonSchema s, dynamic v) => s._setFormat(v)});
 
   // Not used in the draft 2020, but including for completeness and potential future vocabulary useage.
-  static Map<String, SchemaPropertySetter> _draft2020_format_assertion = Map<String, SchemaPropertySetter>()
+  static final Map<String, SchemaPropertySetter> _draft2020FormatAssertion = <String, SchemaPropertySetter>{}
     ..addAll({'format': (JsonSchema s, dynamic v) => s._setFormat(v)});
 
-  static Map<String, SchemaPropertySetter> _draft2020_content = Map<String, SchemaPropertySetter>()
-    ..addAll(_draft2019_content);
+  static final Map<String, SchemaPropertySetter> _draft2020Content = <String, SchemaPropertySetter>{}
+    ..addAll(_draft2019Content);
 
-  static Map<String, SchemaPropertySetter> _draft2020_metadata = Map<String, SchemaPropertySetter>()
-    ..addAll(_draft2019_metadata);
+  static final Map<String, SchemaPropertySetter> _draft2020Metadata = <String, SchemaPropertySetter>{}
+    ..addAll(_draft2019Metadata);
 
-  static Map<String, Map<String, SchemaPropertySetter>> _draft2020VocabMap = Map()
-    ..addAll({
-      "https://json-schema.org/draft/2020-12/vocab/core": _draft2020_core,
-      "https://json-schema.org/draft/2020-12/vocab/applicator": _draft2020_applicator,
-      "https://json-schema.org/draft/2020-12/vocab/unevaluated": _draft2020_unevaluated,
-      "https://json-schema.org/draft/2020-12/vocab/validation": _draft2020_validation,
-      "https://json-schema.org/draft/2020-12/vocab/meta-data": _draft2020_metadata,
-      "https://json-schema.org/draft/2020-12/vocab/format-annotation": _draft2020_format_annotation,
-      "https://json-schema.org/draft/2020-12/vocab/format-assertion": _draft2020_format_assertion,
-      "https://json-schema.org/draft/2020-12/vocab/content": _draft2020_content
+  static final Map<String, Map<String, SchemaPropertySetter>> _draft2020VocabMap = {}..addAll({
+      "https://json-schema.org/draft/2020-12/vocab/core": _draft2020Core,
+      "https://json-schema.org/draft/2020-12/vocab/applicator": _draft2020Applicator,
+      "https://json-schema.org/draft/2020-12/vocab/unevaluated": _draft2020Unevaluated,
+      "https://json-schema.org/draft/2020-12/vocab/validation": _draft2020Validation,
+      "https://json-schema.org/draft/2020-12/vocab/meta-data": _draft2020Metadata,
+      "https://json-schema.org/draft/2020-12/vocab/format-annotation": _draft2020FormatAnnotation,
+      "https://json-schema.org/draft/2020-12/vocab/format-assertion": _draft2020FormatAssertion,
+      "https://json-schema.org/draft/2020-12/vocab/content": _draft2020Content
     });
 
-  static Map<String, Map<String, SchemaPropertySetter>> _vocabMaps = Map()
+  static final Map<String, Map<String, SchemaPropertySetter>> _vocabMaps = {}
     ..addAll(_draft2019VocabMap)
     ..addAll(_draft2020VocabMap);
 
   // This structure holds setters for custom vocabularies.
   // It is Vocab Name->Attribute->Setter Function.
-  Map<String, Map<String, SchemaPropertySetter>> _customVocabMap = Map();
+  Map<String, Map<String, SchemaPropertySetter>> _customVocabMap = {};
 
   // Hold values set by the custom accessors.
-  Map<String, ValidationContext Function(ValidationContext, Object)> _customAttributeValidators = Map();
+  final Map<String, ValidationContext Function(ValidationContext, Object)> _customAttributeValidators = {};
 
   // This structure holds validators for custom formats.
-  Map<String, ValidationContext Function(ValidationContext, String)> _customFormats = Map();
+  Map<String, ValidationContext Function(ValidationContext, String)> _customFormats = {};
 
   /// Create a SchemaPropertySetter function that is used for setting custom properties while processing a schema.
   SchemaPropertySetter _setCustomProperty(String keyword, CustomKeyword processor) {
@@ -1441,8 +1437,7 @@ class JsonSchema {
       var obj = processor.propertySetter(s, o);
       // Create and store a closure for the validation function. This is kind of weird, but makes the code in the
       // validator simpler.
-      ValidationContext Function(ValidationContext, Object) validationFunction =
-          (ValidationContext context, Object instance) => processor.validator(context, obj, instance);
+      validationFunction(ValidationContext context, Object instance) => processor.validator(context, obj, instance);
       s._customAttributeValidators[keyword] = validationFunction;
       return obj;
     };
@@ -1454,11 +1449,11 @@ class JsonSchema {
     if (customVocabularies == null) {
       return {};
     }
-    Map<String, Map<String, SchemaPropertySetter>> accessorMap = Map();
-    customVocabularies.forEach((customVocabulary) {
+    Map<String, Map<String, SchemaPropertySetter>> accessorMap = {};
+    for (final customVocabulary in customVocabularies) {
       accessorMap[customVocabulary.vocabulary.toString()] = customVocabulary.keywordImplementations
           .map((keyword, setter) => MapEntry(keyword, _setCustomProperty(keyword, setter)));
-    });
+    }
     return accessorMap;
   }
 
@@ -1470,7 +1465,7 @@ class JsonSchema {
       _resolveDynamicAnchor(dynamicAnchor, dynamicParent);
 
   @override
-  bool operator ==(Object other) => other is JsonSchema && this.hashCode == other.hashCode;
+  bool operator ==(Object other) => other is JsonSchema && hashCode == other.hashCode;
 
   @override
   int get hashCode => _hashCode ?? (_hashCode = DeepCollectionEquality().hash(schemaMap ?? schemaBool));
@@ -1493,7 +1488,7 @@ class JsonSchema {
     final parents = <JsonSchema>[];
 
     var circularRefEscapeHatch = 0;
-    var nextParent = this._parent;
+    var nextParent = _parent;
     while (nextParent != null && circularRefEscapeHatch < 100) {
       circularRefEscapeHatch += 1;
       parents.add(nextParent);
@@ -1815,11 +1810,7 @@ class JsonSchema {
   /// List of example instances for the [JsonSchema].
   ///
   /// Spec: https://tools.ietf.org/html/draft-wright-json-schema-validation-01#section-7.4
-  List get examples => defaultValue != null
-      ? ([]
-        ..addAll(_examples)
-        ..add(defaultValue))
-      : _examples;
+  List get examples => defaultValue != null ? ([..._examples, defaultValue]) : _examples;
 
   /// The maximum number of items allowed.
   ///
@@ -1931,18 +1922,18 @@ class JsonSchema {
   // --------------------------------------------------------------------------
 
   void _addRefRetrievals(Uri? ref) {
-    final JsonSchema? Function(JsonSchema?) addSchemaFunction = (JsonSchema? schema) {
+    addSchemaFunction(JsonSchema? schema) {
       if (schema != null) {
         // Set referenced schema's path should be equivalent to the $ref value.
         // Otherwise it's set as `/`, which doesn't help track down
         // the source of validation errors.
-        schema._path = ref.toString() + '/';
+        schema._path = '$ref/';
 
         final String rootRef = '${ref!.removeFragment()}#';
         _addSchemaToRefMap(rootRef, schema._root);
         return null;
       } else {
-        String exceptionMessage = 'Couldn\'t resolve ref: ${ref} ';
+        String exceptionMessage = 'Couldn\'t resolve ref: $ref ';
         if (_refProvider != null) {
           exceptionMessage += 'using the provided ref provider';
         } else {
@@ -1950,7 +1941,7 @@ class JsonSchema {
         }
         throw FormatExceptions.error(exceptionMessage);
       }
-    };
+    }
 
     final AsyncRetrievalOperation asyncRefSchemaOperation = _refProvider != null
         ? () => _fetchRefSchemaFromAsyncProvider(ref).then(addSchemaFunction)
@@ -2044,11 +2035,14 @@ class JsonSchema {
 
   // Create a [JsonSchema] from a sub-schema of the root.
   _createOrRetrieveSchema(String path, dynamic schema, SchemaAssigner assigner, {mustBeValid = true}) {
-    var throwError;
+    Never Function()? throwError;
 
-    if (schema is bool && !(schemaVersion >= SchemaVersion.draft6))
+    if (schema is bool && !(schemaVersion >= SchemaVersion.draft6)) {
       throwError = () => throw FormatExceptions.schema(path, schema);
-    if (schema is! Map && schema is! bool) throwError = () => throw FormatExceptions.schema(path, schema);
+    }
+    if (schema is! Map && schema is! bool) {
+      throwError = () => throw FormatExceptions.schema(path, schema);
+    }
 
     if (throwError != null) {
       if (mustBeValid) throwError();
@@ -2363,7 +2357,7 @@ class JsonSchema {
       _vocabulary = TypeValidators.object(r'$vocabulary', value)
           .cast<String, bool>()
           .map<Uri, bool>((key, value) => MapEntry(Uri.parse(key), value));
-    } catch (RuntimeException) {
+    } catch (runtimeException) {
       throw FormatExceptions.error('\$vocabulary must be a map from URI to bool: $value');
     }
   }
@@ -2374,13 +2368,12 @@ class JsonSchema {
           TypeValidators.object(r'$vocabulary', value).cast<String, bool>().map<Uri, bool>((key, required) {
         // Check to see if the vocabulary is required to validate and if we are able to validate the vocabulary.
         if (required && !(_vocabMaps.containsKey(key.toString()) || _customVocabMap.containsKey(key.toString()))) {
-          throw FormatExceptions.error(
-              '\$vocabulary ${key} is required by the schema but is unknown to this validator');
+          throw FormatExceptions.error('\$vocabulary $key is required by the schema but is unknown to this validator');
         }
         return MapEntry(Uri.parse(key), required);
       });
-    } on FormatException catch (e) {
-      throw e;
+    } on FormatException {
+      rethrow;
     } catch (e) {
       throw FormatExceptions.error('\$vocabulary must be a map from URI to bool: $value');
     }
@@ -2490,18 +2483,24 @@ class JsonSchema {
         } else if (v is List) {
           // Dependencies must have contents in draft4, but can be empty in draft6 and later
           if (schemaVersion == SchemaVersion.draft4) {
-            if (v.isEmpty) throw FormatExceptions.error('property dependencies must be non-empty array');
+            if (v.isEmpty) {
+              throw FormatExceptions.error('property dependencies must be non-empty array');
+            }
           }
 
-          final Set uniqueDeps = Set();
-          v.forEach((propDep) {
-            if (propDep is! String) throw FormatExceptions.string('propertyDependency', v);
+          final Set uniqueDeps = {};
+          for (final propDep in v) {
+            if (propDep is! String) {
+              throw FormatExceptions.string('propertyDependency', v);
+            }
 
-            if (uniqueDeps.contains(propDep)) throw FormatExceptions.error('property dependencies must be unique: $v');
+            if (uniqueDeps.contains(propDep)) {
+              throw FormatExceptions.error('property dependencies must be unique: $v');
+            }
 
             _propertyDependencies.putIfAbsent(k, () => []).add(propDep);
             uniqueDeps.add(propDep);
-          });
+          }
         } else {
           throw FormatExceptions.error(
               'dependency values must be object or array (or boolean in draft6 and later): $v');
@@ -2520,19 +2519,24 @@ class JsonSchema {
         if (v is List) {
           // Dependencies must have contents in draft4, but can be empty in draft6 and later
           if (schemaVersion == SchemaVersion.draft4) {
-            if (v.isEmpty) throw FormatExceptions.error('dependentRequired must be non-empty array');
+            if (v.isEmpty) {
+              throw FormatExceptions.error('dependentRequired must be non-empty array');
+            }
           }
 
-          final Set uniqueDeps = Set();
-          v.forEach((propDep) {
-            if (propDep is! String) throw FormatExceptions.string('propertyDependency', v);
+          final Set uniqueDeps = {};
+          for (final propDep in v) {
+            if (propDep is! String) {
+              throw FormatExceptions.string('propertyDependency', v);
+            }
 
-            if (uniqueDeps.contains(propDep))
+            if (uniqueDeps.contains(propDep)) {
               throw FormatExceptions.error('dependentRequired items must be unique: $v');
+            }
 
             _propertyDependencies.putIfAbsent(k, () => []).add(propDep);
             uniqueDeps.add(propDep);
-          });
+          }
         } else {
           throw FormatExceptions.error('dependentRequired values must an array: $v');
         }

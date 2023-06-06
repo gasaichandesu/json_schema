@@ -30,7 +30,7 @@ class HtmlSchemaUrlClient extends SchemaUrlClient {
       _logger.info('GET\'ing Schema from URL: $uri');
       final response = await http.get(uri);
 
-      var jsonResponse;
+      final dynamic jsonResponse;
       if (response.statusCode == 200) {
         jsonResponse = json.decode(response.body);
       } else {
@@ -66,7 +66,7 @@ class HtmlSchemaUrlClient extends SchemaUrlClient {
 
       final response = await http.get(uri);
 
-      var jsonResponse;
+      final dynamic jsonResponse;
       if (response.statusCode == 200) {
         jsonResponse = json.decode(response.body);
       } else {
@@ -76,7 +76,7 @@ class HtmlSchemaUrlClient extends SchemaUrlClient {
       }
 
       // HTTP servers ignore fragments, so resolve a sub-map if a fragment was specified.
-      var subSchema;
+      Object? subSchema;
       try {
         subSchema = JsonPointer(uriWithFrag.fragment).read(jsonResponse);
       } catch (_) {

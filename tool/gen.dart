@@ -27,8 +27,8 @@ bool generateFileMapFromDirectory(
   List<String> skipFiles = const [],
 }) {
   Map<String, String> schemaFiles = {};
-  for (var directory in directories) {
-    for (var file in _jsonFiles(directory)) {
+  for (final directory in directories) {
+    for (final file in _jsonFiles(directory)) {
       schemaFiles[file.path.replaceFirst(directory, host)] = file.readAsStringSync();
     }
   }
@@ -38,7 +38,7 @@ bool generateFileMapFromDirectory(
 
   final fileContents = '''
 // GENERATED CODE - DO NOT MODIFY BY HAND
-Map<String, $rootType> ${variableName} = {
+Map<String, $rootType> $variableName = {
   ${_generateRemoteEntries(schemaFiles, skipFiles: skipFiles)}
 };
 ''';
@@ -57,7 +57,7 @@ String _generateRemoteEntries(Map<String, String> schemaFiles,
       return;
     }
     entries.add(
-      """${isFirst ? '' : '\n  '}"${path}": ${fileType == 'String' ? 'r"""$fileContents"""' : fileContents.replaceAll(r'$', r'\$').replaceAll('\n', '\n  ')}""",
+      """${isFirst ? '' : '\n  '}"$path": ${fileType == 'String' ? 'r"""$fileContents"""' : fileContents.replaceAll(r'$', r'\$').replaceAll('\n', '\n  ')}""",
     );
     isFirst = false;
   });

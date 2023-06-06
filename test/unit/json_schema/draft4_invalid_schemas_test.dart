@@ -50,10 +50,10 @@ void main() {
 
   testSuiteFolder.listSync().forEach((testEntry) {
     final String shortName = path.basename(testEntry.path);
-    group('Invalid schema (draft4): ${shortName}', () {
+    group('Invalid schema (draft4): $shortName', () {
       if (testEntry is File) {
         final List tests = json.decode((testEntry).readAsStringSync());
-        tests.forEach((testObject) {
+        for (final testObject in tests) {
           final schemaData = testObject['schema'];
           final description = testObject['description'];
 
@@ -69,7 +69,7 @@ void main() {
               catchException(e);
             }
           });
-        });
+        }
       }
     });
   });

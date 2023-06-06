@@ -55,16 +55,19 @@ final List<String> skippedNonWorkingTestFiles = const [
   'zeroTerminatedFloats.json'
 ];
 
-final List<String> commonSkippedTestFiles = []
+final List<String> commonSkippedTestFiles = [
+  ...skippedDraft4FormatTestFiles,
+  ...skippedDraft6FormatTestFiles,
   // Formats
-  ..addAll(skippedDraft4FormatTestFiles)
-  ..addAll(skippedDraft6FormatTestFiles)
-  ..addAll(skippedDraft7FormatTestFiles)
+  ...skippedDraft7FormatTestFiles,
+
   // Optional Tests
-  ..addAll(skippedOptionalDraft7TestFiles)
-  ..addAll(skippedOptionalTestFiles)
+  ...skippedOptionalDraft7TestFiles,
+  ...skippedOptionalTestFiles,
+
   // Non-passing Tests
-  ..addAll(skippedNonWorkingTestFiles);
+  ...skippedNonWorkingTestFiles
+];
 
 /// All Skipped tests below are OPTIONAL format tests. Implementations make a best effort to support these.
 /// All Drafts: Dart Doesn't Support Leap-Seconds per: https://api.dart.dev/stable/2.15.1/dart-core/Duration/secondsPerMinute-constant.html
@@ -269,19 +272,20 @@ final List<String> skippedUUIDTests = const [
 
 /// A list of tests to skip for all drafts.
 /// Should match the portion of the test name printed after the JSON file name on test run.
-final List<String> commonSkippedTests = []
-  ..addAll(skippedLeapSecondTests)
-  ..addAll(skippedPermissiveDateTimeFormatTests)
-  ..addAll(skippedIpv6FormatTests)
-  ..addAll(skippedRelativeJsonPointerFormatTest)
-  ..addAll(skippedIdnHostnameFormatTests)
-  ..addAll(skippedIdnEmailFormatTests)
-  ..addAll(skippedIriFormatTests)
-  ..addAll(skippedJsonPointerFormatTests)
-  ..addAll(skippedRegexTests)
-  ..addAll(skippedTimeTests)
-  ..addAll(skippedURITests)
-  ..addAll(skippedUUIDTests);
+final List<String> commonSkippedTests = [
+  ...skippedLeapSecondTests,
+  ...skippedPermissiveDateTimeFormatTests,
+  ...skippedIpv6FormatTests,
+  ...skippedRelativeJsonPointerFormatTest,
+  ...skippedIdnHostnameFormatTests,
+  ...skippedIdnEmailFormatTests,
+  ...skippedIriFormatTests,
+  ...skippedJsonPointerFormatTests,
+  ...skippedRegexTests,
+  ...skippedTimeTests,
+  ...skippedURITests,
+  ...skippedUUIDTests
+];
 
 final List<String> draft2019SkippedTestFiles = [
   // As of Draft 2019, format validation becomes an opt-in option.
@@ -305,8 +309,8 @@ final List<String> draft2019SkippedTestFiles = [
   "uri-reference.json",
   "uri-template.json",
   "uri.json",
-  "uuid.json",
-]..addAll(commonSkippedTestFiles);
+  "uuid.json", ...commonSkippedTestFiles,
+];
 
 final List<String> draft2019FormatSkippedTestFiles = [];
 
@@ -333,5 +337,5 @@ final List<String> draft2020SkippedTestFiles = [
   "uri-reference.json",
   "uri-template.json",
   "uri.json",
-  "uuid.json",
-]..addAll(commonSkippedTestFiles);
+  "uuid.json", ...commonSkippedTestFiles,
+];
