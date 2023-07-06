@@ -1,5 +1,12 @@
-## 5.0.1
+## 5.1.2
+- Widen range on `http` to include 1.0.0
+
+## 5.1.1
+- Apply pub.dev linting guidelines.
+
+## 5.1.0
 - Add an `JsonSchema.empty({SchemaVersion schemaVersion})` constructor
+- Update `logging` and `collection` dependencies
 
 ## 5.0.0
 - Clean up pubspec, add .pubignore
