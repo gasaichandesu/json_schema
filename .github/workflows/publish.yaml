@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   create-sbom-release-asset:
-    Name: Create SBOM Release Asset
+    name: Create SBOM Release Asset
     runs-on: ubuntu-latest
     steps:
       - name: Publish SBOM to Release Assets
@@ -22,5 +22,5 @@ jobs:
           path: ./
           format: cyclonedx-json
   publish:
-    Name: Publish to pub.dev
+    name: Publish to pub.dev
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
