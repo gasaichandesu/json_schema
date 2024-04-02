@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Publish SBOM to Release Assets
+        uses: anchore/sbom-action@v0
         with:
           path: ./
           format: cyclonedx-json
