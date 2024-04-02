@@ -24,5 +24,3 @@
 * Version:
 * Browser name / VM and version:
 * Operating System and version:
-
-> __FYI:__ @michaelcarter-wf
