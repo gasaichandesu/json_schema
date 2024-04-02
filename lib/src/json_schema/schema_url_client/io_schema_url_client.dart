@@ -83,7 +83,7 @@ class IoSchemaUrlClient extends SchemaUrlClient {
     // HTTP servers ignore fragments, so resolve a sub-map if a fragment was specified.
     Map<String, dynamic>? subSchema;
     try {
-      subSchema = JsonPointer(uriWithFrag.fragment).read(schemaMap) as Map<String, dynamic>;
+      subSchema = JsonPointer(uriWithFrag.fragment).read(schemaMap)! as Map<String, dynamic>;
     } catch (_) {
       // Do nothing if we fail to decode or read the pointer.
     }

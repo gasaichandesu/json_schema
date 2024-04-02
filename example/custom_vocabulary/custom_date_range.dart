@@ -70,7 +70,7 @@ main() async {
 // The Object returned here is passed into the validators as the `schemaProperty`
 Object _dateSetter(JsonSchema s, Object? value) {
   try {
-    return DateTime.parse(value as String);
+    return DateTime.parse(value! as String);
   } catch (e) {
     throw FormatException("value must parse as a date: $value");
   }
