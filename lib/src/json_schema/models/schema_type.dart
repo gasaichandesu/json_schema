@@ -53,7 +53,18 @@ class SchemaType implements Comparable<SchemaType> {
 
   static const SchemaType string = SchemaType._(6);
 
-  static List<SchemaType> get values => const <SchemaType>[array, boolean, integer, number, nullValue, object, string];
+  static const SchemaType file = SchemaType._(7);
+
+  static List<SchemaType> get values => const <SchemaType>[
+        array,
+        boolean,
+        integer,
+        number,
+        nullValue,
+        object,
+        string,
+        file,
+      ];
 
   final int value;
 
@@ -61,7 +72,8 @@ class SchemaType implements Comparable<SchemaType> {
   int get hashCode => value;
 
   @override
-  bool operator ==(Object other) => other is SchemaType && other.hashCode == hashCode;
+  bool operator ==(Object other) =>
+      other is SchemaType && other.hashCode == hashCode;
 
   SchemaType copy() => this;
 
@@ -77,7 +89,8 @@ class SchemaType implements Comparable<SchemaType> {
       number: 'number',
       nullValue: 'null',
       object: 'object',
-      string: 'string'
+      string: 'string',
+      file: 'file',
     };
 
     return typeToStringMap[this]!;
@@ -100,6 +113,8 @@ class SchemaType implements Comparable<SchemaType> {
         return object;
       case 'string':
         return string;
+      case 'file':
+        return file;
       default:
         return null;
     }
